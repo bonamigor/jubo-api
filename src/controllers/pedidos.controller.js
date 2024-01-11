@@ -460,26 +460,12 @@ exports.ordersByClientReport = async (req, res) => {
     const [rows] = await dbPromise.execute(selectQuery, [clienteId, dataInicial, dataFinal]);
 
     await this.getProdutosDoPedido(rows, res);
-
-    // if (rows) {
-    //   rows.forEach(async (row, index, array) => {
-    //     const [rows2] = await dbPromise.execute(selectQueryProdutosNoPedido, [row.id]);
-
-    //     if (rows2) {
-    //       row.itens = rows2;
-    //     }
-
-    //     if (index === array.length - 1) {
-    //       res.status(200).send({ vendas: rows });
-    //     }
-    //   });
-    // }
   } catch (error) {
     res.status(500).send({ message: 'Ocorreu um erro ao recuperar os pedidos desse Cliente.' });
   }
 };
 
-exports.getProdutosDoPedido = async (pedidos, res) => {
+exports.getProdutosDoPedido = async (pedidos, res, total) => {
   try {
     const selectQueryProdutosNoPedido = `select item_pedido.id as itemPedidoId, produtos.id as produtoId, produtos.nome as nome, produtos.unidade_medida as unidade, preco_quantidade.preco_venda as precoVenda, item_pedido.quantidade as quantidade, item_pedido.preco_total as total from estante_produto
     inner join produtos on produtos.id = estante_produto.produto_id
@@ -497,7 +483,7 @@ exports.getProdutosDoPedido = async (pedidos, res) => {
       }
 
       if (i === pedidos.length - 1) {
-        res.status(200).send({ vendas: pedidos });
+        res.status(200).send({ vendas: pedidos, total });
       }
     }
   } catch (error) {
@@ -515,19 +501,11 @@ exports.ordersBetweenDates = async (req, res) => {
   AND pedidos.status != "CANCELADO";`;
 
   try {
-    db.execute(selectQuery, [dataInicial, dataFinal], (err, results) => {
-      if (err) {
-        res.status(500).send({
-          developMessage: err.message,
-          userMessage: `Falha ao recuperar os pedidos entre essas datas. (${dataInicial} a ${dataFinal}).`,
-        });
-        return false;
-      }
+    const [rows] = await dbPromise.execute(selectQuery, [dataInicial, dataFinal]);
 
-      const total = results.reduce((acumulador, numero) => (acumulador += numero.total), 0);
+    const total = rows.reduce((acumulador, numero) => (acumulador += numero.total), 0);
 
-      res.status(200).send({ pedidos: results, valorTotal: total });
-    });
+    await this.getProdutosDoPedido(rows, res, total);
   } catch (error) {
     res.status(500).send({ message: `Ocorreu um erro ao recuperar os pedidos entre essas datas. (${dataInicial} a ${dataFinal})` });
   }
