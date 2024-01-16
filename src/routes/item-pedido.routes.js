@@ -10,6 +10,6 @@ router.post('/pedido/:pedidoId/adicionar', itemPedidoController.adicionarItemAoP
 router.put('/pedido/:pedidoId/atualizar/:itemPedidoId', itemPedidoController.atualizaItemNoPedido);
 
 // ==> DELETE http://localhost:3000/api/pedido/itemPedidoId
-router.delete('/pedido/:pedidoId/item-pedido/:itemPedidoId', itemPedidoController.deletarItemPedido);
+router.delete('/pedido/:pedidoId/item-pedido/:itemPedidoId/:quantidade/estante-id/:estanteId/produto-id/:produtoId', itemPedidoController.deletarItemPedido);
 
 module.exports = router;
