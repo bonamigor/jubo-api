@@ -107,11 +107,12 @@ exports.atualizaQuantidadeAoAtualizar = async (req, res) => {
 
 exports.deletarItemPedido = async (req, res) => {
   try {
+    const { quantidade } = req.body;
     const {
-      itemPedidoId, quantidade, estanteId, produtoId,
+      itemPedidoId, estanteId, produtoId,
     } = req.params;
     const deleteQuery = `DELETE FROM item_pedido where item_pedido.id = ${itemPedidoId}`;
-
+    
     db.query(deleteQuery, (error, results) => {
       if (error) {
         res.status(500).send({
