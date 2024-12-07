@@ -21,4 +21,7 @@ router.put('/produtos', produtoController.updateProduto);
 // ==> DELETE http://localhost:3000/api/produtos/id
 router.delete('/produtos/:id', produtoController.deleteProduto);
 
+// ==> PUT http://localhost:3000/api/produtos/id/status
+router.put('/produtos/:id/status', produtoController.updateProductStatus);
+
 module.exports = router;

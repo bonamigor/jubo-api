@@ -8,8 +8,8 @@ exports.createProduto = async (req, res) => {
     nome, precoCusto, unidadeMedida,
   } = req.body;
   try {
-    const insertQuery = 'INSERT INTO produtos (nome, preco_custo, unidade_medida) VALUES (?, ?, ?)';
-    db.execute(insertQuery, [nome, precoCusto, unidadeMedida], (err, results) => {
+    const insertQuery = 'INSERT INTO produtos (nome, preco_custo, unidade_medida, ativo) VALUES (?, ?, ?, ?)';
+    db.execute(insertQuery, [nome, precoCusto, unidadeMedida, 1], (err, results) => {
       if (err) {
         res.status(500).send({
           developMessage: err.message,
@@ -98,7 +98,7 @@ exports.deleteProduto = async (req, res) => {
 // ==> Método que retorna todos os Produtos cadastrados.
 exports.listAllProdutos = async (req, res) => {
   try {
-    db.execute('SELECT id, nome, preco_custo as preco, unidade_medida as unidade FROM produtos', (err, results) => {
+    db.execute('SELECT id, nome, preco_custo as preco, unidade_medida as unidade, ativo FROM produtos', (err, results) => {
       if (err) {
         res.status(500).send({
           developMessage: err.message,
@@ -159,5 +159,31 @@ exports.listAllProdutosForBuying = async (req, res) => {
     });
   } catch (error) {
     res.status(500).send({ message: 'Ocorreu um erro ao listar os produtos nessa data.' });
+  }
+};
+
+// ==> Método que exclui um produto da Base de Dados.
+exports.updateProductStatus = async (req, res) => {
+  const {
+    ativo,
+  } = req.body;
+  const novoStatusAtivo = ativo === 1 ? 0 : 1;
+  try {
+    db.execute('UPDATE produtos SET ativo = ? WHERE id = ?', [novoStatusAtivo, req.params.id], (err, results) => {
+      if (err) {
+        res.status(500).send({
+          developMessage: err.message,
+          userMessage: 'Falha ao atualizar o status do Produto.',
+        });
+        return false;
+      }
+      res.status(200).send({
+        message: 'Produto atualizado com sucesso!',
+        affectedRows: results.affectedRows,
+      });
+    });
+  } catch (error) {
+    console.error('updateProductStatus', error);
+    res.status(500).send({ message: 'Ocorreu um erro ao atualizar o status do Produto.' });
   }
 };
