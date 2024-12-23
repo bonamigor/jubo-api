@@ -98,7 +98,7 @@ exports.deleteProduto = async (req, res) => {
 // ==> Método que retorna todos os Produtos cadastrados.
 exports.listAllProdutos = async (req, res) => {
   try {
-    db.execute('SELECT id, nome, preco_custo as preco, unidade_medida as unidade, ativo FROM produtos', (err, results) => {
+    db.execute('SELECT id, nome, preco_custo as preco, unidade_medida as unidade, ativo FROM produtos WHERE ativo = 1', (err, results) => {
       if (err) {
         res.status(500).send({
           developMessage: err.message,
@@ -116,7 +116,7 @@ exports.listAllProdutos = async (req, res) => {
 
 exports.listOneProduto = async (req, res) => {
   try {
-    db.execute('SELECT * FROM produtos WHERE id = ?',
+    db.execute('SELECT * FROM produtos WHERE id = ? AND ativo = 1',
       [req.params.id],
       (err, results) => {
         if (err) {
@@ -142,6 +142,7 @@ exports.listAllProdutosForBuying = async (req, res) => {
       INNER JOIN item_pedido ON pedidos.id = item_pedido.pedido_id
       INNER JOIN produtos ON item_pedido.produto_id = produtos.id
       WHERE status = 'CONFIRMADO' AND data_entrega BETWEEN ? AND ?
+      AND produtos.ativo = 1
       GROUP BY produtos.nome, produtos.unidade_medida
       ORDER BY produtos.nome ASC
     `;
