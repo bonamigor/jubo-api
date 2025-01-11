@@ -114,6 +114,25 @@ exports.listAllProdutos = async (req, res) => {
   }
 };
 
+// ==> Método que retorna todos os Produtos cadastrados.
+exports.listAllProdutosParaAdmin = async (req, res) => {
+  try {
+    db.execute('SELECT id, nome, preco_custo as preco, unidade_medida as unidade, ativo FROM produtos', (err, results) => {
+      if (err) {
+        res.status(500).send({
+          developMessage: err.message,
+          userMessage: 'Falha ao listar os Produtos.',
+        });
+        return false;
+      }
+      res.status(200).send({ produtos: results });
+    });
+  } catch (error) {
+    console.error('listAllProdutos', error);
+    res.status(500).send({ message: 'Ocorreu um erro ao listar os produtos.' });
+  }
+};
+
 exports.listOneProduto = async (req, res) => {
   try {
     db.execute('SELECT * FROM produtos WHERE id = ? AND ativo = 1',
