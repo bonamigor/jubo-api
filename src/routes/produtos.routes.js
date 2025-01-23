@@ -6,7 +6,7 @@ const produtoController = require('../controllers/produtos.controller');
 // ==> GET http://localhost:3000/api/produtos
 router.get('/produtos', produtoController.listAllProdutos);
 
-// ==> GET http://localhost:3000/api/produtos
+// ==> GET http://localhost:3000/api/produtos/admin
 router.get('/produtos/admin', produtoController.listAllProdutosParaAdmin);
 
 // ==> GET http://localhost:3000/api/produtos/id
