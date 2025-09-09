@@ -671,3 +671,28 @@ exports.finalizarPedido = async (req, res) => {
     res.status(500).send({ message: 'Ocorreu um erro ao finalizar o pedido.' });
   }
 };
+
+exports.recuperarPrecoVendaProduto = async (req, res) => {
+  const { estanteId, produtoId } = req.params;
+
+  const selectPrecoVenda = 'SELECT preco_venda FROM preco_quantidade WHERE id = (SELECT preco_quantidade_id FROM estante_produto WHERE estante_id = ? AND produto_id = ?)';
+
+  try {
+    db.execute(selectPrecoVenda, [estanteId, produtoId], (err, result) => {
+      if (err) {
+        res.status(500).send({
+          developMessage: err.message,
+          userMessage: `Falha ao recuperar o preço de venda do Produto ${produtoId}`,
+        });
+        return false;
+      }
+
+      res.status(200).send({
+        message: 'Preço de venda recuperado com sucesso!',
+        precoVenda: result[0].preco_venda,
+      });
+    });
+  } catch (error) {
+    res.status(500).send({ message: 'Ocorreu um erro ao recuperar o preço de venda.' });
+  }
+};

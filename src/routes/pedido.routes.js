@@ -60,4 +60,6 @@ router.get('/pedidos/ultimo/:clienteId', pedidosController.recuperarUltimoPedido
 
 router.get('/pedidos/cliente/:clienteId', pedidosController.recuperarPedidosByCliente);
 
+router.get('/estante/:estanteId/produto/:produtoId/precoVenda', pedidosController.recuperarPrecoVendaProduto);
+
 module.exports = router;
