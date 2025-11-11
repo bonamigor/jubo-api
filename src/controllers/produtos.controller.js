@@ -5,11 +5,11 @@ const db = require('../config/database');
 // ==> Método que cria o produto no Banco de Dados.
 exports.createProduto = async (req, res) => {
   const {
-    nome, precoCusto, unidadeMedida,
+    nome, precoCusto, unidadeMedidaId,
   } = req.body;
   try {
-    const insertQuery = 'INSERT INTO produtos (nome, preco_custo, unidade_medida, ativo) VALUES (?, ?, ?, ?)';
-    db.execute(insertQuery, [nome, precoCusto, unidadeMedida, 1], (err, results) => {
+    const insertQuery = 'INSERT INTO produtos (nome, preco_custo, unidade_medida_id, ativo) VALUES (?, ?, ?, ?)';
+    db.execute(insertQuery, [nome, precoCusto, unidadeMedidaId, 1], (err, results) => {
       if (err) {
         res.status(500).send({
           developMessage: err.message,
@@ -32,7 +32,7 @@ exports.createProduto = async (req, res) => {
             id: Object.values(result[0])[0],
             nome,
             precoCusto,
-            unidadeMedida,
+            unidadeMedidaId,
             affectedRows: results.affectedRows,
           },
         });
@@ -47,11 +47,11 @@ exports.createProduto = async (req, res) => {
 // ==> Método que atualiza todas as propriedades do Produto.
 exports.updateProduto = async (req, res) => {
   const {
-    nome, precoCusto, unidadeMedida, id,
+    nome, precoCusto, unidadeMedidaId, id,
   } = req.body;
   try {
-    const updateQuery = 'UPDATE produtos SET nome = ?, preco_custo = ?, unidade_medida = ? WHERE id = ?';
-    db.execute(updateQuery, [nome, precoCusto, unidadeMedida, id], (err, results) => {
+    const updateQuery = 'UPDATE produtos SET nome = ?, preco_custo = ?, unidade_medida_id = ? WHERE id = ?';
+    db.execute(updateQuery, [nome, precoCusto, unidadeMedidaId, id], (err, results) => {
       if (err) {
         res.status(500).send({
           developMessage: err.message,
@@ -63,7 +63,7 @@ exports.updateProduto = async (req, res) => {
         message: `Produto de ID ${id} atualizado com sucesso!`,
         nome,
         precoCusto,
-        unidadeMedida,
+        unidadeMedidaId,
         affectedRows: results.affectedRows,
       });
     });
@@ -95,10 +95,16 @@ exports.deleteProduto = async (req, res) => {
   }
 };
 
-// ==> Método que retorna todos os Produtos cadastrados.
+// ==> Método que retorna todos os Produtos cadastrados (para usuários comuns).
 exports.listAllProdutos = async (req, res) => {
   try {
-    db.execute('SELECT id, nome, preco_custo as preco, unidade_medida as unidade, ativo FROM produtos WHERE ativo = 1', (err, results) => {
+    const query = `
+      SELECT p.id, p.nome, p.preco_custo as preco, u.sigla as unidade, p.ativo 
+      FROM produtos p 
+      INNER JOIN unidades_medida u ON p.unidade_medida_id = u.id 
+      WHERE p.ativo = 1
+    `;
+    db.execute(query, (err, results) => {
       if (err) {
         res.status(500).send({
           developMessage: err.message,
@@ -114,10 +120,15 @@ exports.listAllProdutos = async (req, res) => {
   }
 };
 
-// ==> Método que retorna todos os Produtos cadastrados.
+// ==> Método que retorna todos os Produtos cadastrados (para administradores).
 exports.listAllProdutosParaAdmin = async (req, res) => {
   try {
-    db.execute('SELECT id, nome, preco_custo as preco, unidade_medida as unidade, ativo FROM produtos', (err, results) => {
+    const query = `
+      SELECT p.id, p.nome, p.preco_custo as preco, u.sigla as unidade, p.ativo 
+      FROM produtos p 
+      INNER JOIN unidades_medida u ON p.unidade_medida_id = u.id
+    `;
+    db.execute(query, (err, results) => {
       if (err) {
         res.status(500).send({
           developMessage: err.message,
@@ -128,48 +139,56 @@ exports.listAllProdutosParaAdmin = async (req, res) => {
       res.status(200).send({ produtos: results });
     });
   } catch (error) {
-    console.error('listAllProdutos', error);
+    console.error('listAllProdutosParaAdmin', error);
     res.status(500).send({ message: 'Ocorreu um erro ao listar os produtos.' });
   }
 };
 
+// ==> Método que retorna um produto específico.
 exports.listOneProduto = async (req, res) => {
   try {
-    db.execute('SELECT * FROM produtos WHERE id = ? AND ativo = 1',
-      [req.params.id],
-      (err, results) => {
-        if (err) {
-          res.status(500).send({
-            developMessage: err.message,
-            userMessage: 'Falha ao listar o Produto.',
-          });
-          return false;
-        }
-        res.status(200).send({ produto: results[0] });
-      });
+    const query = `
+      SELECT p.*, u.sigla as unidade_medida_sigla, u.descricao as unidade_medida_descricao 
+      FROM produtos p 
+      INNER JOIN unidades_medida u ON p.unidade_medida_id = u.id 
+      WHERE p.id = ? AND p.ativo = 1
+    `;
+    db.execute(query, [req.params.id], (err, results) => {
+      if (err) {
+        res.status(500).send({
+          developMessage: err.message,
+          userMessage: 'Falha ao listar o Produto.',
+        });
+        return false;
+      }
+      res.status(200).send({ produto: results[0] });
+    });
   } catch (error) {
     console.error('listOneProduto', error);
     res.status(500).send({ message: 'Ocorreu um erro ao listar o produto.' });
   }
 };
 
+// ==> Método que lista produtos para compra baseado em pedidos confirmados.
 exports.listAllProdutosForBuying = async (req, res) => {
   try {
     const { dataInicial, dataFinal } = req.body;
     const selectQuery = `
-      SELECT produtos.nome as nome, produtos.unidade_medida as unidadeMedida, SUM(item_pedido.quantidade) AS quantidade FROM pedidos 
-      INNER JOIN item_pedido ON pedidos.id = item_pedido.pedido_id
-      INNER JOIN produtos ON item_pedido.produto_id = produtos.id
-      WHERE status = 'CONFIRMADO' AND data_entrega BETWEEN ? AND ?
-      AND produtos.ativo = 1
-      GROUP BY produtos.nome, produtos.unidade_medida
-      ORDER BY produtos.nome ASC
+      SELECT p.nome as nome, u.sigla as unidadeMedida, SUM(ip.quantidade) AS quantidade 
+      FROM pedidos pd
+      INNER JOIN item_pedido ip ON pd.id = ip.pedido_id
+      INNER JOIN produtos p ON ip.produto_id = p.id
+      INNER JOIN unidades_medida u ON p.unidade_medida_id = u.id
+      WHERE pd.status = 'CONFIRMADO' AND pd.data_entrega BETWEEN ? AND ?
+      AND p.ativo = 1
+      GROUP BY p.id, p.nome, u.sigla
+      ORDER BY p.nome ASC
     `;
 
     db.execute(selectQuery, [dataInicial, dataFinal], (err, results) => {
       if (err) {
         res.status(500).send({
-          developMessage: err,
+          developMessage: err.message,
           userMessage: 'Falha ao listar os produtos nessa data.',
         });
         return false;
@@ -178,11 +197,12 @@ exports.listAllProdutosForBuying = async (req, res) => {
       res.status(200).send({ produtos: results });
     });
   } catch (error) {
+    console.error('listAllProdutosForBuying', error);
     res.status(500).send({ message: 'Ocorreu um erro ao listar os produtos nessa data.' });
   }
 };
 
-// ==> Método que exclui um produto da Base de Dados.
+// ==> Método que atualiza o status de um produto.
 exports.updateProductStatus = async (req, res) => {
   const {
     ativo,

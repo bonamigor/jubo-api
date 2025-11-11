@@ -10,10 +10,11 @@ const db = require('../config/database');
 exports.listarDetalhadoNaEstante = async (req, res) => {
   try {
     const selectQuery = `SELECT produto_id as produtoId, produtos.nome AS nome,
-    produtos.preco_custo as precoCusto, produtos.unidade_medida as unidade,
+    produtos.preco_custo as precoCusto, unidades_medida.sigla as unidade,
     preco_quantidade.preco_venda as precoVenda, preco_quantidade.quantidade, estante_produto.ativo as ativo
     FROM estante_produto
     INNER JOIN produtos ON estante_produto.produto_id = produtos.id
+    INNER JOIN unidades_medida ON produtos.unidade_medida_id = unidades_medida.id
     INNER JOIN preco_quantidade ON estante_produto.preco_quantidade_id = preco_quantidade.id
     WHERE estante_produto.estante_id = ? AND produtos.ativo = 1`;
 
@@ -41,10 +42,11 @@ exports.listarDetalhadoNaEstante = async (req, res) => {
 exports.listarDetalhadoNoPedido = async (req, res) => {
   try {
     const selectQuery = `SELECT produto_id as produtoId, produtos.nome AS nome,
-    produtos.preco_custo as precoCusto, produtos.unidade_medida as unidade,
+    produtos.preco_custo as precoCusto, unidades_medida.sigla as unidade,
     preco_quantidade.preco_venda as precoVenda, preco_quantidade.quantidade
     FROM estante_produto
     INNER JOIN produtos ON estante_produto.produto_id = produtos.id
+    INNER JOIN unidades_medida ON produtos.unidade_medida_id = unidades_medida.id
     INNER JOIN preco_quantidade ON estante_produto.preco_quantidade_id = preco_quantidade.id
     WHERE estante_produto.estante_id = ? 
     AND estante_produto.ativo = 1 AND produtos.ativo = 1`;

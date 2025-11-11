@@ -9,6 +9,7 @@ const estanteProdutoRoutes = require('./estante-produto.routes');
 const precoQuantidadeRoutes = require('./preco-quantidade.routes');
 const pedidoRoutes = require('./pedido.routes');
 const itemPedidoRoutes = require('./item-pedido.routes');
+const unidadesMedidaRoutes = require('./unidades-medida.routes');
 
 const router = express.Router();
 
@@ -31,4 +32,5 @@ module.exports = [
   precoQuantidadeRoutes,
   pedidoRoutes,
   itemPedidoRoutes,
+  unidadesMedidaRoutes,
 ];
