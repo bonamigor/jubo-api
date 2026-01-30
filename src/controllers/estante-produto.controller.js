@@ -92,3 +92,56 @@ exports.listAllProdutosNaEstante = async (req, res) => {
     res.status(500).send({ message: 'Ocorreu um erro ao listar os produtos na estante.' });
   }
 };
+
+exports.copiarEstanteSimples = async (req, res) => {
+  console.log(req.body);
+  const { estanteOrigemId, estanteDestinoId } = req.body.dados;
+
+  try {
+    // Validação
+    if (!estanteOrigemId || !estanteDestinoId) {
+      return res.status(400).send({
+        userMessage: 'IDs da estante de origem e destino são obrigatórios.',
+      });
+    }
+
+    // Query de cópia usando INSERT IGNORE
+    const copiarQuery = `
+      INSERT IGNORE INTO estante_produto (estante_id, produto_id, preco_quantidade_id, ativo)
+      SELECT 
+        ?,
+        produto_id,
+        preco_quantidade_id,
+        ativo
+      FROM estante_produto 
+      WHERE estante_id = ?
+    `;
+
+    db.execute(copiarQuery, [estanteDestinoId, estanteOrigemId], (err, results) => {
+      if (err) {
+        return res.status(500).send({
+          developMessage: err.message,
+          userMessage: 'Falha ao copiar produtos da estante.',
+        });
+      }
+
+      // Resposta de sucesso
+      res.status(201).send({
+        message: 'Produtos copiados com sucesso!',
+        detalhes: {
+          estanteOrigemId,
+          estanteDestinoId,
+          produtosCopiados: results.affectedRows,
+          affectedRows: results.affectedRows,
+          insertId: results.insertId,
+        },
+      });
+    });
+  } catch (error) {
+    console.error('copiarEstanteSimples', error);
+    res.status(500).send({
+      message: 'Ocorreu um erro ao copiar produtos.',
+      developMessage: error.message,
+    });
+  }
+};

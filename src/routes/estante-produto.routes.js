@@ -9,6 +9,9 @@ router.get('/estantes/:id/produtos', estanteProdutoController.listAllProdutosNaE
 // ==> POST http://localhost:3000/api/estantes/id/produtos/id
 router.post('/estantes/:idEstante/produtos/:idProduto', estanteProdutoController.addProdutoNaEstante);
 
+// ==> POST http://localhost:3000/api/estantes/copiar
+router.post('/estantes/copiar', estanteProdutoController.copiarEstanteSimples);
+
 // ==> GET http://localhost:3000/api/estantes/id/produtos/id
 router.delete('/estantes/:idEstante/produtos/:idProduto', estanteProdutoController.deleteProdutoDaEstante);
 
