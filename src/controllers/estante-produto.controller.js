@@ -94,7 +94,6 @@ exports.listAllProdutosNaEstante = async (req, res) => {
 };
 
 exports.copiarEstanteSimples = async (req, res) => {
-  console.log(req.body);
   const { estanteOrigemId, estanteDestinoId } = req.body.dados;
 
   try {

@@ -6,11 +6,12 @@ const dbPromise = require('../config/databasePromise');
 
 // ==> Método que adicionará um pedido ao banco de dados
 exports.createPedido = async (req, res) => {
-  const { clienteId } = req.body;
+  const { clienteId, empresaId } = req.body;
   const dataCriacao = new Date().getTime();
   try {
-    const insertQuery = 'INSERT INTO pedidos (data_criacao, status, cliente_id) VALUES (?, ?, ?)';
-    db.execute(insertQuery, [dataCriacao, 'CRIADO', clienteId],
+    const insertQuery = empresaId ? 'INSERT INTO pedidos (data_criacao, status, cliente_id, empresa) VALUES (?, ?, ?, ?)' : 'INSERT INTO pedidos (data_criacao, status, cliente_id) VALUES (?, ?, ?)';
+    const params = empresaId ? [dataCriacao, 'CRIADO', clienteId, empresaId] : [dataCriacao, 'CRIADO', clienteId];
+    db.execute(insertQuery, params,
       (err, results) => {
         db.execute('SELECT MAX (id) as id FROM pedidos', (erros, resultados) => {
           if (err || erros) {
@@ -250,7 +251,7 @@ exports.deletePedido = async (req, res) => {
 
 // ==> Método que listará todos os pedidos
 exports.listAllPedidos = async (req, res) => {
-  const selectQuery = 'SELECT pedidos.id AS id, pedidos.data_criacao AS dataCriacao, pedidos.valor_total AS valorTotal, pedidos.status as status, pedidos.observacao as observacao, pedidos.obsCancelamento as obsCancelamento, pedidos.is_finalizado as isFinalizado, clientes.nome AS nome, clientes.endereco AS endereco, clientes.cidade AS cidade, clientes.estado AS estado, clientes.telefone AS telefone FROM pedidos INNER JOIN clientes ON clientes.id = pedidos.cliente_id WHERE pedidos.status = "CRIADO" AND pedidos.valor_total > 0';
+  const selectQuery = 'SELECT pedidos.id AS id, pedidos.data_criacao AS dataCriacao, pedidos.valor_total AS valorTotal, pedidos.status as status, pedidos.observacao as observacao, pedidos.obsCancelamento as obsCancelamento, pedidos.is_finalizado as isFinalizado, pedidos.empresa as empresa, clientes.nome AS nome, clientes.endereco AS endereco, clientes.cidade AS cidade, clientes.estado AS estado, clientes.telefone AS telefone FROM pedidos INNER JOIN clientes ON clientes.id = pedidos.cliente_id WHERE pedidos.status = "CRIADO" AND pedidos.valor_total > 0';
   try {
     db.execute(selectQuery, (err, results) => {
       if (err) {
@@ -295,7 +296,7 @@ exports.listAllTomorrowPedidos = async (req, res) => {
 exports.listOnePedido = async (req, res) => {
   const { pedidoId } = req.params;
   try {
-    db.execute('SELECT pedidos.id AS id, pedidos.data_criacao AS dataCriacao, pedidos.data_entrega AS dataEntrega, pedidos.valor_total AS valorTotal, pedidos.status as status, pedidos.observacao as observacao, pedidos.obsCancelamento as obsCancelamento, pedidos.is_finalizado as isFinalizado, clientes.nome AS nome, clientes.endereco AS endereco, clientes.cidade AS cidade, clientes.estado AS estado, clientes.telefone AS telefone FROM pedidos INNER JOIN clientes ON clientes.id = pedidos.cliente_id WHERE pedidos.id = ?', [pedidoId], (err, results) => {
+    db.execute('SELECT pedidos.id AS id, pedidos.data_criacao AS dataCriacao, pedidos.data_entrega AS dataEntrega, pedidos.valor_total AS valorTotal, pedidos.status as status, pedidos.observacao as observacao, pedidos.obsCancelamento as obsCancelamento, pedidos.is_finalizado as isFinalizado,pedidos.empresa as empresa, clientes.nome AS nome, clientes.endereco AS endereco, clientes.cidade AS cidade, clientes.estado AS estado, clientes.telefone AS telefone FROM pedidos INNER JOIN clientes ON clientes.id = pedidos.cliente_id WHERE pedidos.id = ?', [pedidoId], (err, results) => {
       if (err) {
         res.status(500).send({
           developMessage: err.message,
@@ -425,7 +426,7 @@ exports.recuperarPedidosByCliente = async (req, res) => {
   } else {
     dataParaFiltro = new Date('January, 1').setFullYear(new Date().getFullYear());
   }
-  const selectQuery = "SELECT pedidos.id AS id, pedidos.data_criacao AS dataCriacao, pedidos.data_entrega AS dataEntrega, pedidos.valor_total AS valorTotal, pedidos.status as status, pedidos.observacao as observacao, pedidos.obsCancelamento as obsCancelamento, pedidos.is_finalizado as isFinalizado, clientes.nome AS nome, clientes.endereco AS endereco, clientes.cidade AS cidade, clientes.estado AS estado, clientes.telefone AS telefone FROM pedidos INNER JOIN clientes ON clientes.id = pedidos.cliente_id WHERE pedidos.cliente_id = ? AND pedidos.data_criacao >= ? AND pedidos.status = 'CONFIRMADO' OR 'ENTREGUE'";
+  const selectQuery = "SELECT pedidos.id AS id, pedidos.data_criacao AS dataCriacao, pedidos.data_entrega AS dataEntrega, pedidos.valor_total AS valorTotal, pedidos.status as status, pedidos.observacao as observacao, pedidos.obsCancelamento as obsCancelamento, pedidos.empresa as empresa, pedidos.is_finalizado as isFinalizado, clientes.nome AS nome, clientes.endereco AS endereco, clientes.cidade AS cidade, clientes.estado AS estado, clientes.telefone AS telefone FROM pedidos INNER JOIN clientes ON clientes.id = pedidos.cliente_id WHERE pedidos.cliente_id = ? AND pedidos.data_criacao >= ? AND pedidos.status = 'CONFIRMADO' OR 'ENTREGUE'";
   try {
     db.execute(selectQuery, [clienteId, dataParaFiltro], (error, results) => {
       if (error) {
