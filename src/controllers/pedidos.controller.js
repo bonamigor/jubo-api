@@ -354,7 +354,7 @@ exports.listOnePedidoByCliente = async (req, res) => {
 
 exports.calculaValorTotal = async (req, res) => {
   const { pedidoId } = req.params;
-  const selectQuery = 'SELECT SUM(preco_total) as totalPedido FROM item_pedido WHERE pedido_id = ?;';
+  const selectQuery = 'SELECT COALESCE(SUM(ROUND(preco_unitario * quantidade, 2)), 0) as totalPedido FROM item_pedido WHERE pedido_id = ?;';
   try {
     db.execute(selectQuery, [pedidoId], (err, results) => {
       if (err) {
@@ -375,7 +375,7 @@ exports.calculaValorTotal = async (req, res) => {
 
 exports.recuperarProdutosNoPedido = async (req, res) => {
   const { pedidoId } = req.params;
-  const selectQuery = `select item_pedido.id as itemPedidoId, produtos.id as produtoId, estante_produto.estante_id as estanteId, produtos.nome as nome, produtos.unidade_medida as unidade, preco_quantidade.preco_venda as precoVenda, item_pedido.quantidade as quantidade, item_pedido.preco_total as total from estante_produto
+  const selectQuery = `select item_pedido.id as itemPedidoId, produtos.id as produtoId, estante_produto.estante_id as estanteId, produtos.nome as nome, produtos.unidade_medida as unidade, item_pedido.preco_unitario as precoVenda, item_pedido.quantidade as quantidade, ROUND(item_pedido.preco_unitario * item_pedido.quantidade, 2) as total from estante_produto
   inner join produtos on produtos.id = estante_produto.produto_id
   inner join preco_quantidade on preco_quantidade.id = estante_produto.preco_quantidade_id
   inner join item_pedido on item_pedido.produto_id = estante_produto.produto_id
@@ -468,7 +468,7 @@ exports.ordersByClientReport = async (req, res) => {
 
 exports.getProdutosDoPedido = async (pedidos, res, total) => {
   try {
-    const selectQueryProdutosNoPedido = `select item_pedido.id as itemPedidoId, produtos.id as produtoId, produtos.nome as nome, produtos.unidade_medida as unidade, preco_quantidade.preco_venda as precoVenda, item_pedido.quantidade as quantidade, item_pedido.preco_total as total from estante_produto
+    const selectQueryProdutosNoPedido = `select item_pedido.id as itemPedidoId, produtos.id as produtoId, produtos.nome as nome, produtos.unidade_medida as unidade, item_pedido.preco_unitario as precoVenda, item_pedido.quantidade as quantidade, ROUND(item_pedido.preco_unitario * item_pedido.quantidade, 2) as total from estante_produto
     inner join produtos on produtos.id = estante_produto.produto_id
     inner join preco_quantidade on preco_quantidade.id = estante_produto.preco_quantidade_id
     inner join item_pedido on item_pedido.produto_id = estante_produto.produto_id
@@ -537,7 +537,7 @@ exports.atualizarValorTotal = async (req, res) => {
   const { pedidoId } = req.params;
   const { valorTotal } = req.body;
 
-  const putQuery = valorTotal ? 'UPDATE pedidos SET valor_total = ? WHERE id = ?' : 'update pedidos set pedidos.valor_total = (select sum(item_pedido.preco_total) as total from item_pedido where item_pedido.pedido_id = ?) where id = ?';
+  const putQuery = valorTotal ? 'UPDATE pedidos SET valor_total = ? WHERE id = ?' : 'update pedidos set pedidos.valor_total = (select COALESCE(SUM(ROUND(item_pedido.preco_unitario * item_pedido.quantidade, 2)), 0) as total from item_pedido where item_pedido.pedido_id = ?) where id = ?';
   const paramsArray = valorTotal ? [Number(valorTotal), pedidoId] : [pedidoId, pedidoId];
 
   try {
@@ -563,7 +563,7 @@ exports.atualizarValorTotalSemSend = async (req, res) => {
   const { pedidoId } = req.params;
   const { valorTotal } = req.body;
 
-  const putQuery = valorTotal ? 'UPDATE pedidos SET valor_total = ? WHERE id = ?' : 'update pedidos set pedidos.valor_total = (select sum(item_pedido.preco_total) as total from item_pedido where item_pedido.pedido_id = ?) where id = ?';
+  const putQuery = valorTotal ? 'UPDATE pedidos SET valor_total = ? WHERE id = ?' : 'update pedidos set pedidos.valor_total = (select COALESCE(SUM(ROUND(item_pedido.preco_unitario * item_pedido.quantidade, 2)), 0) as total from item_pedido where item_pedido.pedido_id = ?) where id = ?';
   const paramsArray = valorTotal ? [Number(valorTotal), pedidoId] : [pedidoId, pedidoId];
 
   try {

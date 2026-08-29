@@ -78,6 +78,7 @@ create table pedidos (
 create table item_pedido (
   id int not null auto_increment,
   quantidade int not null,
+  preco_unitario double not null,
   preco_total double not null,
   observacao varchar(255),
   pedido_id int not null,

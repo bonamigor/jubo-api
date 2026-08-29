@@ -8,6 +8,7 @@
     "lint": "eslint --fix --ext .js,.jsx .",
     "prepush": "npm run lint",
     "start": "node server.js",
+    "migrate:preco-unitario": "node scripts/migrate-preco-unitario.js",
     "prepare": "husky install"
   },
   "author": "Rafael Bonamigo",
