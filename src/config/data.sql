@@ -35,7 +35,7 @@ primary key(id));
 create table preco_quantidade (
 id int not null auto_increment, 
 preco_venda double not null, 
-quantidade int not null, 
+quantidade decimal(20,6) not null, 
 primary key (id));
 
 create table estante_produto (
@@ -77,7 +77,7 @@ create table pedidos (
 
 create table item_pedido (
   id int not null auto_increment,
-  quantidade int not null,
+  quantidade decimal(20,6) not null,
   preco_unitario double not null,
   preco_total double not null,
   observacao varchar(255),

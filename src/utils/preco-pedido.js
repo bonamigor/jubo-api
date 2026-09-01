@@ -37,12 +37,15 @@ function calcularPrecoTotal(precoUnitario, quantidade) {
   return Math.round(precoUnitario * quantidade * 100) / 100;
 }
 
+const CASAS_DECIMAIS_QUANTIDADE = 6;
+
 function normalizarQuantidade(quantidade) {
   const numero = Number(quantidade);
   if (!Number.isFinite(numero) || numero <= 0) return null;
-  const inteiro = Math.trunc(numero);
-  if (inteiro <= 0) return null;
-  return inteiro;
+  const fator = 10 ** CASAS_DECIMAIS_QUANTIDADE;
+  const arredondada = Math.round(numero * fator) / fator;
+  if (arredondada <= 0) return null;
+  return arredondada;
 }
 
 async function atualizarValorTotalPedido(pedidoId) {
@@ -63,4 +66,5 @@ module.exports = {
   calcularPrecoTotal,
   normalizarQuantidade,
   atualizarValorTotalPedido,
+  CASAS_DECIMAIS_QUANTIDADE,
 };
