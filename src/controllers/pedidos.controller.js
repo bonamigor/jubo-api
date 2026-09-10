@@ -375,11 +375,10 @@ exports.calculaValorTotal = async (req, res) => {
 
 exports.recuperarProdutosNoPedido = async (req, res) => {
   const { pedidoId } = req.params;
-  const selectQuery = `select item_pedido.id as itemPedidoId, produtos.id as produtoId, estante_produto.estante_id as estanteId, produtos.nome as nome, produtos.unidade_medida as unidade, item_pedido.preco_unitario as precoVenda, item_pedido.quantidade as quantidade, ROUND(item_pedido.preco_unitario * item_pedido.quantidade, 2) as total from estante_produto
-  inner join produtos on produtos.id = estante_produto.produto_id
-  inner join preco_quantidade on preco_quantidade.id = estante_produto.preco_quantidade_id
-  inner join item_pedido on item_pedido.produto_id = estante_produto.produto_id
-  where item_pedido.pedido_id = ? and estante_produto.estante_id = item_pedido.estante_id;`;
+  const selectQuery = `SELECT item_pedido.id AS itemPedidoId, produtos.id AS produtoId, item_pedido.estante_id AS estanteId, produtos.nome AS nome, produtos.unidade_medida AS unidade, item_pedido.preco_unitario AS precoVenda, item_pedido.quantidade AS quantidade, ROUND(item_pedido.preco_unitario * item_pedido.quantidade, 2) AS total
+  FROM item_pedido
+  INNER JOIN produtos ON produtos.id = item_pedido.produto_id
+  WHERE item_pedido.pedido_id = ?;`;
   try {
     db.execute(selectQuery, [pedidoId], (err, results) => {
       if (err) {
@@ -468,11 +467,10 @@ exports.ordersByClientReport = async (req, res) => {
 
 exports.getProdutosDoPedido = async (pedidos, res, total) => {
   try {
-    const selectQueryProdutosNoPedido = `select item_pedido.id as itemPedidoId, produtos.id as produtoId, produtos.nome as nome, produtos.unidade_medida as unidade, item_pedido.preco_unitario as precoVenda, item_pedido.quantidade as quantidade, ROUND(item_pedido.preco_unitario * item_pedido.quantidade, 2) as total from estante_produto
-    inner join produtos on produtos.id = estante_produto.produto_id
-    inner join preco_quantidade on preco_quantidade.id = estante_produto.preco_quantidade_id
-    inner join item_pedido on item_pedido.produto_id = estante_produto.produto_id
-    where item_pedido.pedido_id = ? and estante_produto.estante_id = item_pedido.estante_id;`;
+    const selectQueryProdutosNoPedido = `SELECT item_pedido.id AS itemPedidoId, produtos.id AS produtoId, produtos.nome AS nome, produtos.unidade_medida AS unidade, item_pedido.preco_unitario AS precoVenda, item_pedido.quantidade AS quantidade, ROUND(item_pedido.preco_unitario * item_pedido.quantidade, 2) AS total
+    FROM item_pedido
+    INNER JOIN produtos ON produtos.id = item_pedido.produto_id
+    WHERE item_pedido.pedido_id = ?;`;
 
     // eslint-disable-next-line no-plusplus
     for (let i = 0; i <= pedidos.length - 1; i++) {
